@@ -1,4 +1,6 @@
+import BarChartStats from "./components/BarChartStats"
 import Dashboard from "./components/Dashboard"
+import Statistics from "./components/Statistics"
 
 function App() {
 
@@ -8,6 +10,8 @@ function App() {
         Transaction Dashboard
       </div>
       <Dashboard />
+      <Statistics/>
+      <BarChartStats/>
     </div>
   )
 }
