@@ -3,32 +3,46 @@ const { TRANSACTION_API_END_POINT, HOST } = require("../config/env-variables");
 const Transaction = require("../model/Transaction");
 
 const getAllTransactions = async (req, res) => {
-    try {
-        const { page = 1, perPage = 10, search = "" } = req.query;
-        const skip = (page - 1) * perPage;
-        const query = search
-        ? {
-            $or: [
-                { title: { $regex: search, $options: "i" } },
-                { description: { $regex: search, $options: "i" } },
-            ],
+  try {
+      const { page = 1, perPage = 10, search = "", month } = req.query;
+      const skip = (page - 1) * perPage;
+      let query = search
+      ? {
+          $or: [
+              { title: { $regex: search, $options: "i" } },
+              { description: { $regex: search, $options: "i" } },
+          ],
+          }
+      : {};
+
+      // If month parameter is provided, add month filter to the query
+      if (month) {
+        const parsedMonth = parseInt(month);
+        if (!isNaN(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12) {
+            query.$expr = { 
+              $eq: [{ $month: "$dateOfSale" }, parsedMonth] 
             }
-        : {};
-
-        const transactions = await Transaction.find(query)
-        .skip(skip)
-        .limit(parseInt(perPage));
-
-        res.status(200).json({
-            success: true,
-            message: "Successfuly fetched all transaction",
-            data: transactions,
-            err: {}
-        });
-    } catch (error) {
-        console.error("Error fetching transactions:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        } else {
+            return res.status(400).json({ 
+              error: 'Invalid month value. Month must be a number between 1 and 12.' 
+            });
+        }
     }
+
+      const transactions = await Transaction.find(query)
+      .skip(skip)
+      .limit(parseInt(perPage));
+
+      res.status(200).json({
+          success: true,
+          message: "Successfully fetched all transactions",
+          data: transactions,
+          err: {}
+      });
+  } catch (error) {
+      console.error("Error fetching transactions:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 const initializeDatabase = async (req, res) => {
